@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>CodeMentor AI</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+
+<div class="container">
+    <h1>CodeMentor AI</h1>
+    <p>Paste your code below and receive guided debugging feedback.</p>
+
+    <form th:action="@{/analyze}" th:object="${request}" method="post">
+
+        <label for="language">Programming Language</label>
+        <select id="language" th:field="*{language}">
+            <option value="Java">Java</option>
+            <option value="Python">Python</option>
+            <option value="JavaScript">JavaScript</option>
+            <option value="C++">C++</option>
+        </select>
+
+        <label for="code">Your Code</label>
+        <textarea id="code" th:field="*{code}" rows="15" placeholder="Paste your code here..."></textarea>
+
+        <button type="submit">Analyze Code</button>
+    </form>
+
+    <div class="result" th:if="${result != null}">
+        <h2>Analysis Result</h2>
+
+        <h3>Summary</h3>
+        <p th:text="${result.summary}"></p>
+
+        <h3>Issues</h3>
+        <ul>
+            <li th:each="issue : ${result.issues}" th:text="${issue}"></li>
+        </ul>
+
+        <h3>Progressive Hints</h3>
+        <ol>
+            <li th:each="hint : ${result.hints}" th:text="${hint}"></li>
+        </ol>
+
+        <h3>Generated Test Cases</h3>
+        <ul>
+            <li th:each="test : ${result.testCases}" th:text="${test}"></li>
+        </ul>
+
+        <h3>Explanation</h3>
+        <p th:text="${result.explanation}"></p>
+
+        <h3>Corrected Code</h3>
+        <pre th:text="${result.correctedCode}"></pre>
+    </div>
+</div>
+
+</body>
+</html>
