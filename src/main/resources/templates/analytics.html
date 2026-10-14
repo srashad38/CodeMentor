@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Learning Analytics · CodeMentor AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/}"><span class="brand-mark">&lt;/&gt;</span><span>CodeMentor <strong>AI</strong></span></a>
+    <a class="ghost-button" th:href="@{/}">← Back to debugger</a>
+</header>
+
+<main class="shell analytics-page">
+    <section class="hero analytics-hero">
+        <p class="eyebrow">LEARNER &amp; INSTRUCTOR VIEW</p>
+        <h1>Learning <em>analytics.</em></h1>
+        <p class="hero-copy">Track recurring programming weaknesses, hint usage, and self-reported progress across completed analyses.</p>
+    </section>
+
+    <section class="metric-grid">
+        <article class="metric-card"><span>Total analyses</span><strong th:text="${analytics.totalSubmissions}">0</strong></article>
+        <article class="metric-card"><span>Problems solved</span><strong th:text="${analytics.solved}">0</strong></article>
+        <article class="metric-card"><span>Needs practice</span><strong th:text="${analytics.needsPractice}">0</strong></article>
+        <article class="metric-card accent-metric"><span>Top recurring weakness</span><strong th:text="${analytics.topWeakness}">No pattern yet</strong></article>
+    </section>
+
+    <div class="analytics-grid">
+        <section class="result-panel">
+            <div class="panel-title"><span class="result-number">PATTERNS</span><h2>Common misunderstandings</h2></div>
+            <div class="empty-history" th:if="${#maps.isEmpty(analytics.categoryCounts)}"><span>{ }</span><p>Complete analyses to build a weakness profile.</p></div>
+            <div class="pattern-list" th:unless="${#maps.isEmpty(analytics.categoryCounts)}">
+                <div class="pattern-row" th:each="entry : ${analytics.categoryCounts}">
+                    <span th:text="${entry.key}">Logic Error</span>
+                    <div class="pattern-track"><i th:style="|width: ${entry.value * 100 / analytics.totalSubmissions}%|"></i></div>
+                    <strong th:text="${entry.value}">1</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="recommendation-card analytics-recommendation">
+            <span class="result-number">PERSONALIZED PLAN</span>
+            <div><h2>Recommended mini-lesson</h2><p th:text="${analytics.recommendation}"></p></div>
+        </section>
+    </div>
+
+    <section class="result-panel recent-table">
+        <div class="panel-title"><span class="result-number">HISTORY</span><h2>Recent learning activity</h2></div>
+        <div class="activity-row" th:each="item : ${history}">
+            <span class="language-dot"></span>
+            <div><strong th:text="${item.language}">Java</strong><small th:text="${item.mistakeCategory ?: 'General Debugging'}">Logic Error</small></div>
+            <span class="activity-status" th:text="${#strings.replace(item.progressStatus ?: 'NOT_REPORTED', '_', ' ')}">NOT REPORTED</span>
+            <a th:href="@{/history/{id}(id=${item.id})}">Review →</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

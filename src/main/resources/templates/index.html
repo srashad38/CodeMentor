@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="AI-guided code debugging for students">
+    <title>CodeMentor AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <script defer th:src="@{/app.js}"></script>
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/}" aria-label="CodeMentor home">
+        <span class="brand-mark">&lt;/&gt;</span>
+        <span>CodeMentor <strong>AI</strong></span>
+    </a>
+    <div class="topbar-actions">
+        <a class="analytics-link" th:href="@{/analytics}">Learning analytics</a>
+        <div class="status"><span></span> Groq connected</div>
+    </div>
+</header>
+
+<main class="shell">
+    <section class="hero">
+        <p class="eyebrow">YOUR PERSONAL DEBUGGING PARTNER</p>
+        <h1>Understand the bug.<br><em>Learn the fix.</em></h1>
+        <p class="hero-copy">Paste your code and get clear explanations, progressive hints, test cases, and a corrected example.</p>
+    </section>
+
+    <div class="workspace">
+        <section class="editor-card" aria-labelledby="editor-title">
+            <div class="card-header">
+                <div>
+                    <p class="section-label">NEW ANALYSIS</p>
+                    <h2 id="editor-title">Your code</h2>
+                </div>
+                <div class="editor-actions">
+                    <label class="ghost-button upload-button" for="codeFile">Upload file</label>
+                    <input id="codeFile" type="file" accept=".java,.py,.js,.ts,.cpp,.cc,.cs,.go,.rs,.txt" hidden>
+                    <button class="ghost-button" id="exampleButton" type="button">Load example</button>
+                </div>
+            </div>
+
+            <form id="analysisForm" th:action="@{/analyze}" th:object="${request}" method="post">
+                <div class="field-row">
+                    <div class="field language-field">
+                        <label for="language">Language</label>
+                        <select id="language" th:field="*{language}">
+                            <option value="Java">Java</option>
+                            <option value="Python">Python</option>
+                            <option value="JavaScript">JavaScript</option>
+                            <option value="TypeScript">TypeScript</option>
+                            <option value="C++">C++</option>
+                            <option value="C#">C#</option>
+                            <option value="Go">Go</option>
+                            <option value="Rust">Rust</option>
+                        </select>
+                    </div>
+                    <span class="character-count"><span id="characterCount">0</span> / 20,000</span>
+                </div>
+
+                <div class="code-wrap">
+                    <span class="line-number" aria-hidden="true">1</span>
+                    <textarea id="code" th:field="*{code}" rows="17" maxlength="20000"
+                              spellcheck="false" required
+                              placeholder="Paste the code you want to understand..."></textarea>
+                </div>
+
+                <button class="primary-button" id="analyzeButton" type="submit">
+                    <span class="button-label">Analyze code</span>
+                    <span class="button-loading" hidden><i></i> Thinking…</span>
+                    <span aria-hidden="true">→</span>
+                </button>
+            </form>
+
+            <div class="error" role="alert" th:if="${errorMessage != null}">
+                <span class="error-icon">!</span>
+                <div><strong>Analysis couldn’t be completed</strong><p th:text="${errorMessage}"></p></div>
+            </div>
+        </section>
+
+        <aside class="history-card">
+            <div class="card-header compact">
+                <div>
+                    <p class="section-label">RECENT</p>
+                    <h2>Analysis history</h2>
+                </div>
+                <span class="history-count" th:text="${#lists.size(history)}">0</span>
+            </div>
+
+            <div class="empty-history" th:if="${#lists.isEmpty(history)}">
+                <span>{ }</span>
+                <p>Your completed analyses will appear here.</p>
+            </div>
+
+            <nav class="history-list" aria-label="Recent analyses" th:unless="${#lists.isEmpty(history)}">
+                <a class="history-item" th:each="item : ${history}" th:href="@{/history/{id}(id=${item.id})}">
+                    <span class="language-dot" th:classappend="${#strings.toLowerCase(item.language).replace('+','p').replace('#','sharp')}"></span>
+                    <span class="history-main">
+                        <strong th:text="${item.language}">Java</strong>
+                        <small th:text="${#temporals.format(item.createdAt, 'MMM d · h:mm a')}">Today</small>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                </a>
+            </nav>
+        </aside>
+    </div>
+
+    <section class="results" id="results" th:if="${result != null}">
+        <div class="result-heading">
+            <div>
+                <p class="section-label" th:text="${viewingHistory == true ? 'SAVED ANALYSIS' : 'ANALYSIS COMPLETE'}">ANALYSIS COMPLETE</p>
+                <h2>What’s happening in your code</h2>
+            </div>
+            <a class="ghost-button new-analysis" th:href="@{/}">+ New analysis</a>
+        </div>
+
+        <article class="summary-panel">
+            <span class="result-number">01</span>
+            <div><h3>Summary</h3><p th:text="${result.summary}"></p></div>
+        </article>
+
+        <div class="insight-strip">
+            <div><span>Detected pattern</span><strong th:text="${result.mistakeCategory}">Logic Error</strong></div>
+            <div><span>Analysis method</span><strong>Static scan + AI test simulation</strong></div>
+        </div>
+
+        <article class="result-panel static-panel">
+            <div class="panel-title"><span class="result-number">02</span><h3>Static diagnostic scan</h3></div>
+            <ul><li th:each="finding : ${result.staticFindings}" th:text="${finding}"></li></ul>
+        </article>
+
+        <div class="result-grid">
+            <article class="result-panel issues-panel">
+                <div class="panel-title"><span class="result-number">03</span><h3>Issues found</h3></div>
+                <ul class="issue-list"><li th:each="issue : ${result.issues}" th:text="${issue}"></li></ul>
+            </article>
+            <article class="result-panel hints-panel">
+                <div class="panel-title"><span class="result-number">04</span><h3>Progressive hints</h3></div>
+                <p class="hint-intro">Try each hint before revealing the next one.</p>
+                <ol class="hint-list staged-hints">
+                    <li th:each="hint, stat : ${result.hints}" th:classappend="${stat.index > 0 ? 'locked-hint' : ''}" th:text="${hint}"></li>
+                </ol>
+                <button class="ghost-button reveal-hint" type="button">Reveal next hint</button>
+            </article>
+        </div>
+
+        <article class="result-panel explanation-panel">
+            <div class="panel-title"><span class="result-number">05</span><h3>Explanation</h3></div>
+            <p th:text="${result.explanation}"></p>
+        </article>
+
+        <div class="result-grid lower-grid">
+            <article class="result-panel test-panel">
+                <div class="panel-title"><span class="result-number">06</span><h3>Generated test suite</h3></div>
+                <p class="test-note">Use these cases to simulate runtime behavior safely without executing untrusted code.</p>
+                <ul><li th:each="test : ${result.testCases}" th:text="${test}"></li></ul>
+            </article>
+            <article class="code-panel solution-panel is-locked">
+                <div class="code-panel-header">
+                    <div><span class="result-number">07</span><h3>Corrected code</h3></div>
+                    <button class="copy-button" type="button" data-copy-target="correctedCode">Copy</button>
+                </div>
+                <div class="solution-lock">
+                    <strong>Work through the hints first</strong>
+                    <p>The solution stays hidden to encourage active problem solving.</p>
+                    <button class="primary-button show-solution" type="button">I tried it — show solution</button>
+                </div>
+                <pre id="correctedCode"><code th:text="${result.correctedCode}"></code></pre>
+            </article>
+        </div>
+
+        <article class="recommendation-card">
+            <span class="result-number">NEXT STEP</span>
+            <div><h3>Personalized learning recommendation</h3><p th:text="${result.learningRecommendation}"></p></div>
+        </article>
+
+        <form class="progress-card" th:if="${submissionId != null}" th:action="@{/history/{id}/progress(id=${submissionId})}" method="post">
+            <div><strong>Did this guidance help you solve the problem?</strong><p>Your answer improves recurring-weakness and progress analytics.</p></div>
+            <input type="hidden" name="hintsViewed" id="hintsViewed" value="1">
+            <div class="progress-actions">
+                <button name="status" value="NEEDS_PRACTICE" type="submit" class="ghost-button">I need more practice</button>
+                <button name="status" value="SOLVED" type="submit" class="primary-button compact-button">I solved it</button>
+            </div>
+        </form>
+    </section>
+</main>
+
+<footer><span>CodeMentor AI</span><p>Learn by understanding, not just copying.</p></footer>
+</body>
+</html>

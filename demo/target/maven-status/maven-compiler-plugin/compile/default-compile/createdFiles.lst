@@ -1,9 +1,0 @@
-com/codementor/dto/CodeAnalysisRequest.class
-com/codementor/controller/CodeAnalysisController.class
-com/codementor/model/AnalysisResult.class
-com/codementor/service/AiService.class
-com/codementor/model/CodeSubmission.class
-com/codementor/dto/CodeAnalysisResponse.class
-com/codementor/CodeMentorApplication.class
-com/codementor/service/CodeAnalysisService.class
-com/codementor/repository/CodeSubmissionRepository.class
